@@ -18,6 +18,12 @@ extern char **environ;
 //the command to run
 char *to_run;
 
+int endsWith (char* base, char* str) {
+  int blen = strlen(base);
+  int slen = strlen(str);
+  return (blen >= slen) && (0 == strcmp(base + blen - slen, str));
+}
+
 //fork a process when there's any change in watch file
 void callback( 
     ConstFSEventStreamRef streamRef, 
@@ -30,7 +36,25 @@ void callback(
   pid_t pid;
   int   status;
 
+  int run_cmd = 0;
+ 
   /*printf("Callback called\n"); */
+  for (int i=0; i<numEvents; ++i) {
+    char *path = ((char **)eventPaths)[i];
+
+    if (endsWith(path, ".py") ||
+	endsWith(path, ".js") ||
+	endsWith(path, ".gs") ||
+	endsWith(path, ".html")) {
+      run_cmd = 1;
+    }
+    printf("%x %s\n", eventFlags[i], path);
+    fflush(stdout);
+  }
+
+  if (!run_cmd) {
+    return;
+  }
 
   if((pid = fork()) < 0) {
     fprintf(stderr, "error: couldn't fork \n");
@@ -75,7 +99,8 @@ int main(int argc, char **argv) {
     pathsToWatch,
     kFSEventStreamEventIdSinceNow,
     latency,
-    kFSEventStreamCreateFlagNone
+    //kFSEventStreamCreateFlagNone
+    kFSEventStreamCreateFlagFileEvents
   ); 
 
   FSEventStreamScheduleWithRunLoop(stream, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode); 
