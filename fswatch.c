@@ -48,7 +48,8 @@ void callback(
 	endsWith(path, ".html")) {
       run_cmd = 1;
     }
-    printf("%x %s\n", eventFlags[i], path);
+    printf("%s %x %s\n", run_cmd ? "[!]" : "   ",
+	   eventFlags[i], path);
     fflush(stdout);
   }
 
